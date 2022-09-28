@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<head>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<script>
+test(t => {
+  // The spec demands that a duplicate "default" fails, even without TT being
+  // enabled in the CSP.
+  const policy = { createHTML: a => a };
+
+  // This should work:
+  let a = trustedTypes.createPolicy("duplicatename", policy);
+  let b = trustedTypes.createPolicy("duplicatename", policy);
+
+  // The second instance should throw:
+  let c = trustedTypes.createPolicy("default", policy);
+  assert_throws_js(TypeError, _ => trustedTypes.createPolicy("default", policy));
+}, "createPolicy - duplicate default policies");
+</script>
+</body>
