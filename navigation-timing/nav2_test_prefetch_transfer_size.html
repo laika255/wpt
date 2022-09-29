@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Navigation Timing Transfert Size of Prefetched Page</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+  <script src="/common/utils.js"></script>
+  <script src="/common/dispatcher/dispatcher.js"></script>
+</head>
+
+<body>
+  <script>
+    function add_iframe(url) {
+      return new Promise(resolve => {
+        const frame = document.createElement('iframe');
+        frame.src = url;
+        frame.addEventListener('load', () => {
+          resolve(frame);
+        }, { once: true });
+        document.body.appendChild(frame);
+      });
+    };
+    promise_test(async t => {
+      // Add an iframe
+      let frame = await add_iframe('resources/iframe-prefetch_transfer-size.html')
+        .then((frame) => {
+          return new Promise(resolve => {
+            frame.addEventListener('load', () => {
+              resolve(frame);
+            }, { once: true });
+            // Prefetch a url as link element and navigate to the url in the
+            // iframe.
+            frame.contentWindow.run();
+          });
+        });
+
+      // Verify navigation timing transfer size is 0.;
+      let transferSize = await frame.contentWindow.getTransferSize();
+      assert_equals(transferSize, 0);
+
+    }, "Navigation timing transfer size for a prefetched navigation should be 0.");
+
+
+
+  /* Executor model*/
+  // const addLink = (uuid) => {
+  //   return new Promise(resolve => {
+  //     const link = document.createElement('link');
+  //     link.onload = function () { resolve(); };
+  //     link.rel = 'prefetch';
+  //     link.as = 'document';
+  //     link.href = 'blank_page_prefetch.html?uuid=' + uuid;
+  //     document.body.appendChild(link);
+  //   });
+  // }
+
+  //         const navigateToPrefetchedUrl = (uuid) => {
+  //           document.location.href = 'blank_page_prefetch.html?uuid=' + uuid;
+  //         }
+
+  //         function run() {
+  //                 addLink().then(navigateToPrefetchedUrl);
+  //               }
+  //               const getTransferSize = () => window.performance.getEntriesByType('navigation')[0].transferSize;
+
+
+  //         promise_test(async t => {
+  //           const testPage = new RemoteContext(token());
+
+  //         const handler = window.open(`resources/exec.html?uuid=${testPage.context_id}`);
+  //         t.add_cleanup(() => handler.close());
+
+  //         let size = await testPage.execute_script(getTransferSize);
+
+  //         const prefetchedPage = new RemoteContext(token());
+  //         await testPage.execute_script(addLink, [prefetchedPage.context_id]);
+
+  //         await testPage.execute_script(navigateToPrefetchedUrl, [prefetchedPage.context_id]);
+
+  //         size = await prefetchedPage.execute_script(() => { return getTransferSize() });
+  //         assert_equals(0, size);
+  //       }, "Navigation timing transfer size for a prefetched navigation should be 0.");
+  </script>
+</body>
+
+</html>
