@@ -41,6 +41,7 @@ class MockPressureService {
     this.pressureServiceReadingTimerId_ = null;
     this.pressureStatus_ = PressureStatus.kOk;
     this.updatesDelivered_ = 0;
+    this.forceUpdate_ = false;
   }
 
   async bindObserver(observer) {
@@ -52,13 +53,14 @@ class MockPressureService {
     return {status: this.pressureStatus_};
   }
 
-  startPlatformCollector(sampleRate) {
+  startPlatformCollector(sampleRate, forceUpdate = false) {
     if (sampleRate === 0)
       return;
 
     if (this.pressureServiceReadingTimerId_ != null)
-      stopPlatformCollector();
+      this.stopPlatformCollector();
 
+    this.forceUpdate_ = forceUpdate;
     // The following code for calculating the timestamp was taken from
     // https://source.chromium.org/chromium/chromium/src/+/main:third_party/
     // blink/web_tests/http/tests/resources/
@@ -76,6 +78,14 @@ class MockPressureService {
 
     const timeout = (1 / sampleRate) * 1000;
     this.pressureServiceReadingTimerId_ = window.setInterval(() => {
+      if (this.forceUpdate_) {
+        // Toggle update pressureState and pressureFactor every update.
+        if (this.updatesDelivered_ % 2)
+          this.setPressureUpdate('critical', ['thermal']);
+        else
+          this.setPressureUpdate('serious', ['power-supply']);
+      }
+
       if (this.pressureUpdate_ === null || this.observer_ === null)
         return;
       this.pressureUpdate_.timestamp = {
